@@ -1,9 +1,8 @@
-// app/api/mail/route.ts
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
 export async function POST(req: Request) {
-  const { name, email, message } = await req.json()
+  const { email, message } = await req.json()
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -16,9 +15,11 @@ export async function POST(req: Request) {
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: email,
-    subject: `📩 ${name}님으로 부터의 메일입니다.`,
+    subject: `Plug 인증번호 입니다.`,
     html: `
+      <p>인증번호는</p>
       <p>${message}</p>
+      <p>입니다.</p>
     `,
   })
 
