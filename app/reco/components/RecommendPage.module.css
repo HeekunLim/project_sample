@@ -1,0 +1,30 @@
+.recoList {
+  width: 40%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 40px;
+}
+
+.recoItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .recoItemLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    .recoItemDesc {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      .recoItemDescArtist {
+        font-size: 12px;
+        color: #aaa;
+      }
+    }
+  }
+  .recoItemRight {
+    font-size: 12px;
+    color: #333;
+  }
+}
