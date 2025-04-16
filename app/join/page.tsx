@@ -11,9 +11,24 @@ export default function EmailVerifyForm() {
   const [isVerified, setIsVerified] = useState(false); // 인증이 되었는지 유무
   const [isCodeSent, setIsCodeSent] = useState(false); // 메인 전송 성공, 실패 여부
   const [passwordType, setPasswordType] = useState("password"); // 비밀번호 필드의 type 상태 추가
+  const [showProfileForm, setShowProfileForm] = useState(false);
+
+  const [profileName, setProfileName] = useState("");
 
   // 인증번호 메일 전송
   const handleSubmit = async () => {
+    // 이메일 중복 확인
+    const { data: existingMember, error } = await supabase
+      .from("member")
+      .select("email")
+      .eq("email", email)
+      .single();
+
+    if (existingMember) {
+      alert("이미 가입된 이메일입니다.");
+      return;
+    }
+
     // 6자리 난수 생성
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setCheckNum(code);
@@ -51,16 +66,17 @@ export default function EmailVerifyForm() {
     );
   };
 
+  const handleImageUpload = async () => {};
+
   // 멤버 테이블에 등록
   const handleRegister = async () => {
-    if (!isVerified || !password) return;
-
     const { data, error } = await supabase.from("member").insert([
       {
         email: email,
         pw: password,
         is_verified: true,
         recent_login: new Date().toISOString(),
+        profile_name: profileName,
       },
     ]);
 
@@ -69,84 +85,101 @@ export default function EmailVerifyForm() {
       alert("회원가입 중 오류가 발생했습니다");
     } else {
       alert("회원가입이 완료되었습니다!");
-      // 필요하다면 페이지 이동 등 처리
     }
   };
 
   return (
     <div style={styles.container}>
-      <input
-        type="email"
-        placeholder="이메일"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={
-          isVerified
-            ? { ...styles.input, ...styles.disabledInput }
-            : styles.input
-        }
-        required
-        disabled={isVerified} // 인증이 완료되었을 경우 비활성화
-      />
-      <button
-        onClick={handleSubmit}
-        style={
-          isVerified
-            ? { ...styles.button, ...styles.disabledButton }
-            : styles.button
-        }
-        disabled={isVerified} // 인증이 완료되었을 경우 비활성화
-      >
-        전송
-      </button>
-      <input
-        type="text"
-        placeholder="인증번호 입력"
-        value={userCode}
-        onChange={(e) => setUserCode(e.target.value)}
-        style={
-          isVerified
-            ? { ...styles.input, ...styles.disabledInput }
-            : isCodeSent
-            ? styles.input
-            : { ...styles.input, ...styles.disabledInput }
-        }
-        disabled={!isCodeSent || isVerified} // 인증 요청을 보내고 인증이 안된 경우에만 활성화
-      />
-      <button
-        onClick={handleVerify}
-        style={
-          isCodeSent && !isVerified
-            ? styles.button
-            : { ...styles.button, ...styles.disabledButton }
-        }
-        disabled={!isCodeSent || isVerified} // 인증 요청을 보내고 인증이 안된 경우에만 활성화
-      >
-        인증 확인
-      </button>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-        <input
-          type={passwordType}
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={styles.input}
-        />
-        <button onClick={togglePasswordVisibility} style={styles.button}>
-          {passwordType === "password" ? "보기" : "숨기기"}
-        </button>
-      </div>
-      <button
-        onClick={handleRegister}
-        style={
-          isVerified && password
-            ? styles.button
-            : { ...styles.button, ...styles.disabledButton }
-        }
-        disabled={!isVerified || !password} // 인증이 완료되고 비밀번호가 비어있지 않을 때만 활성화
-      >
-        다음
-      </button>
+      {!showProfileForm ? (
+        <>
+          {/* 기존 이메일, 인증번호, 비밀번호 입력 UI */}
+          <input
+            type="email"
+            placeholder="이메일"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={
+              isVerified
+                ? { ...styles.input, ...styles.disabledInput }
+                : styles.input
+            }
+            required
+            disabled={isVerified}
+          />
+          <button
+            onClick={handleSubmit}
+            style={
+              isVerified
+                ? { ...styles.button, ...styles.disabledButton }
+                : styles.button
+            }
+            disabled={isVerified}
+          >
+            전송
+          </button>
+          <input
+            type="text"
+            placeholder="인증번호 입력"
+            value={userCode}
+            onChange={(e) => setUserCode(e.target.value)}
+            style={
+              isVerified
+                ? { ...styles.input, ...styles.disabledInput }
+                : isCodeSent
+                ? styles.input
+                : { ...styles.input, ...styles.disabledInput }
+            }
+            disabled={!isCodeSent || isVerified}
+          />
+          <button
+            onClick={handleVerify}
+            style={
+              isCodeSent && !isVerified
+                ? styles.button
+                : { ...styles.button, ...styles.disabledButton }
+            }
+            disabled={!isCodeSent || isVerified}
+          >
+            인증 확인
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <input
+              type={passwordType}
+              placeholder="비밀번호"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={styles.input}
+            />
+            <button onClick={togglePasswordVisibility} style={styles.button}>
+              {passwordType === "password" ? "보기" : "숨기기"}
+            </button>
+          </div>
+          <button
+            onClick={() => setShowProfileForm(true)}
+            style={
+              isVerified && password
+                ? styles.button
+                : { ...styles.button, ...styles.disabledButton }
+            }
+            disabled={!isVerified || !password}
+          >
+            다음
+          </button>
+        </>
+      ) : (
+        <>
+          <input
+            type="text"
+            placeholder="프로필 이름"
+            value={profileName}
+            onChange={(e) => setProfileName(e.target.value)}
+            style={styles.input}
+          />
+          <button onClick={handleRegister} style={styles.button}>
+            회원가입
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -187,5 +220,12 @@ const styles = {
     backgroundColor: "#ccc",
     color: "#666",
     cursor: "not-allowed",
+  },
+  label: {
+    fontWeight: "bold",
+    fontSize: "0.9rem",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "0.5rem",
   },
 };
