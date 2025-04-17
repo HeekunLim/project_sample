@@ -15,6 +15,9 @@ export default function EmailVerifyForm() {
 
   const [profileName, setProfileName] = useState("");
 
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string>("");
+
   // 인증번호 메일 전송
   const handleSubmit = async () => {
     // 이메일 중복 확인
@@ -66,10 +69,33 @@ export default function EmailVerifyForm() {
     );
   };
 
-  const handleImageUpload = async () => {};
+  const handleImageUpload = async () => {
+    if (!profileImage) return "";
+
+    const fileExt = profileImage.name.split(".").pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `profile/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("images") // 버킷 이름
+      .upload(filePath, profileImage);
+
+    if (uploadError) {
+      console.error("이미지 업로드 실패:", uploadError.message);
+      return "";
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("images")
+      .getPublicUrl(filePath);
+
+    return urlData.publicUrl;
+  };
 
   // 멤버 테이블에 등록
   const handleRegister = async () => {
+    const uploadedUrl = await handleImageUpload();
+
     const { data, error } = await supabase.from("member").insert([
       {
         email: email,
@@ -77,6 +103,7 @@ export default function EmailVerifyForm() {
         is_verified: true,
         recent_login: new Date().toISOString(),
         profile_name: profileName,
+        profile_pic: uploadedUrl, // 추가된 부분
       },
     ]);
 
@@ -168,6 +195,27 @@ export default function EmailVerifyForm() {
         </>
       ) : (
         <>
+          <label>프로필 사진</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) setProfileImage(file);
+            }}
+          />
+          {profileImage && (
+            <img
+              src={URL.createObjectURL(profileImage)}
+              alt="preview"
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
+            />
+          )}
           <input
             type="text"
             placeholder="프로필 이름"
