@@ -18,7 +18,6 @@ export default function EmailVerifyForm() {
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [profileName, setProfileName] = useState("");
   const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [profileImageUrl, setProfileImageUrl] = useState<string>("");
 
   // 인증번호 메일 전송
   const handleSubmit = async () => {
@@ -65,14 +64,18 @@ export default function EmailVerifyForm() {
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `profile/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage.from("images").upload(filePath, profileImage);
+    const { error: uploadError } = await supabase.storage
+      .from("images")
+      .upload(filePath, profileImage);
 
     if (uploadError) {
       console.error("이미지 업로드 실패:", uploadError.message);
       return "";
     }
 
-    const { data: urlData } = supabase.storage.from("images").getPublicUrl(filePath);
+    const { data: urlData } = supabase.storage
+      .from("images")
+      .getPublicUrl(filePath);
     return urlData.publicUrl;
   };
 
@@ -101,32 +104,18 @@ export default function EmailVerifyForm() {
   };
 
   return (
-    <div style={styles.container}>
+    <div>
       {!showProfileForm ? (
         <>
-          {/* 기존 이메일, 인증번호, 비밀번호 입력 UI */}
           <input
             type="email"
             placeholder="이메일"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={
-              isVerified
-                ? { ...styles.input, ...styles.disabledInput }
-                : styles.input
-            }
             required
             disabled={isVerified}
           />
-          <button
-            onClick={handleSubmit}
-            style={
-              isVerified
-                ? { ...styles.button, ...styles.disabledButton }
-                : styles.button
-            }
-            disabled={isVerified}
-          >
+          <button onClick={handleSubmit} disabled={isVerified}>
             전송
           </button>
           <input
@@ -134,45 +123,24 @@ export default function EmailVerifyForm() {
             placeholder="인증번호 입력"
             value={userCode}
             onChange={(e) => setUserCode(e.target.value)}
-            style={
-              isVerified
-                ? { ...styles.input, ...styles.disabledInput }
-                : isCodeSent
-                ? styles.input
-                : { ...styles.input, ...styles.disabledInput }
-            }
             disabled={!isCodeSent || isVerified}
           />
-          <button
-            onClick={handleVerify}
-            style={
-              isCodeSent && !isVerified
-                ? styles.button
-                : { ...styles.button, ...styles.disabledButton }
-            }
-            disabled={!isCodeSent || isVerified}
-          >
+          <button onClick={handleVerify} disabled={!isCodeSent || isVerified}>
             인증 확인
           </button>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div>
             <input
               type={passwordType}
               placeholder="비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
             />
-            <button onClick={togglePasswordVisibility} style={styles.button}>
+            <button onClick={togglePasswordVisibility}>
               {passwordType === "password" ? "보기" : "숨기기"}
             </button>
           </div>
           <button
             onClick={() => setShowProfileForm(true)}
-            style={
-              isVerified && password
-                ? styles.button
-                : { ...styles.button, ...styles.disabledButton }
-            }
             disabled={!isVerified || !password}
           >
             다음
@@ -190,75 +158,17 @@ export default function EmailVerifyForm() {
             }}
           />
           {profileImage && (
-            <img
-              src={URL.createObjectURL(profileImage)}
-              alt="preview"
-              style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-                objectFit: "cover",
-              }}
-            />
+            <img src={URL.createObjectURL(profileImage)} alt="preview" />
           )}
           <input
             type="text"
             placeholder="프로필 이름"
             value={profileName}
             onChange={(e) => setProfileName(e.target.value)}
-            style={styles.input}
           />
-          <button onClick={handleRegister} style={styles.button}>
-            회원가입
-          </button>
+          <button onClick={handleRegister}>회원가입</button>
         </>
       )}
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "1rem",
-    maxWidth: "320px",
-    margin: "2rem auto",
-    padding: "1rem",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    fontFamily: "sans-serif",
-  },
-  input: {
-    padding: "0.5rem",
-    fontSize: "1rem",
-    border: "1px solid #ccc",
-    borderRadius: "4px",
-  },
-  button: {
-    padding: "0.5rem",
-    fontSize: "1rem",
-    backgroundColor: "#0070f3",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-  },
-  disabledInput: {
-    backgroundColor: "#f0f0f0",
-    color: "#888",
-    cursor: "not-allowed",
-  },
-  disabledButton: {
-    backgroundColor: "#ccc",
-    color: "#666",
-    cursor: "not-allowed",
-  },
-  label: {
-    fontWeight: "bold",
-    fontSize: "0.9rem",
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "0.5rem",
-  },
-};
