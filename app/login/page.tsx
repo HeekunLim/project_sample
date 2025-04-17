@@ -7,15 +7,22 @@ import { LoginRequestDto } from "../application/usecases/member/dto/LoginRequest
 export default function LoginForm() {
   const [email, setEmail] = useState(""); // 사용자가 입력한 이메일
   const [password, setPassword] = useState(""); // 사용자가 입력한 비밀번호
+  const [passwordType, setPasswordType] = useState("password");
+
+  const togglePasswordVisibility = () => {
+    setPasswordType((prevType) =>
+      prevType === "password" ? "text" : "password"
+    );
+  };
 
   const handleVerify = async () => {
     const loginDto: LoginRequestDto = {
       email,
       password,
     };
-  
+
     const loginUseCase = new LoginUseCase();
-  
+
     try {
       const result = await loginUseCase.execute(loginDto);
       alert(result.message);
@@ -39,12 +46,15 @@ export default function LoginForm() {
         required
       />
       <input
-        type="text"
+        type={passwordType}
         placeholder="비밀번호"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
       />
+      <button onClick={togglePasswordVisibility}>
+        {passwordType === "password" ? "보기" : "숨기기"}
+      </button>
       <button onClick={handleVerify}>로그인</button>
     </div>
   );
