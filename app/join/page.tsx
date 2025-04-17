@@ -7,7 +7,7 @@ import { EmailVerificationDto } from "../application/usecases/member/dto/EmailVe
 import { RegisterMemberUseCase } from "../application/usecases/member/RegisterMemberUseCase";
 import { SendVerificationCodeUseCase } from "../application/usecases/member/SendVerificationCodeUseCase";
 
-export default function EmailVerifyForm() {
+export default function JoinForm() {
   const [email, setEmail] = useState(""); // 사용자가 입력한 이메일
   const [checkNum, setCheckNum] = useState(""); // 생성된 인증번호
   const [userCode, setUserCode] = useState(""); // 사용자가 입력한 인증번호
