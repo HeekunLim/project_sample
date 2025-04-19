@@ -1,0 +1,32 @@
+import { supabase } from "../../../lib/supabase";
+import { EmailVerificationDto } from "./dto/EmailVerificationDto";
+
+export class SendVerificationCodeUseCase {
+  async execute(dto: EmailVerificationDto) {
+    const { email, code } = dto;
+
+    // 이메일 중복 확인
+    const { data: existingMember, error } = await supabase
+      .from("member")
+      .select("email")
+      .eq("email", email)
+      .single();
+
+    if (existingMember) {
+      throw new Error("이미 가입된 이메일입니다.");
+    }
+
+    // 메일 전송 요청
+    const res = await fetch("/api/mail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, message: code }),
+    });
+
+    if (!res.ok) {
+      throw new Error("인증번호 전송에 실패했습니다");
+    }
+
+    return { message: "인증번호가 전송되었습니다" };
+  }
+}
